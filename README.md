@@ -12,4 +12,4 @@ This project is part of the exam coursework for the *Statistical Machine Learnin
 
 ---
 
-In order to access (if you know you can!) to additional *data*, *code* or *supplementary material*, just follow [this link](https://drive.google.com/drive/folders/1FjxYK7QlstAFrrgn_EEV_HRXyWx0q2JH?usp=sharing)!
+In order to access (if you know you can!) to additional *data*, *code* or *supplementary material*, just follow [this link](https://bit.ly/cathode-sml-reserved)!
