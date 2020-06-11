@@ -1,10 +1,131 @@
+### C/C++/Fortran & custom stuff ###
+
+# IDEs/editors configuration directories
+**/.vscode/
+.vscode/*
+.vscode/
+.ionide/
+**/.idea/
+.idea/
+.idea
+*.idea
+**/.clion/
+**/.pycharm/
+**/.atom/
+**/.clangd/
+qtcreator/
+**/qtcreator/
+
+# Local configuration files
+CMakeLists.txt.user
+Makefile.user
+*.cflags
+*.config
+*.creator
+*.creator.user
+*.cxxflags
+*.files
+*.includes
+**/.cproject
+**/.project
+
+# File manager configuration files
+.directory
+
+# Temporary/backup files
+*~
+*#
+*.swp
+
+# MacOS self-generated files
+.DS_Store
+.DS_Store?
+*.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Code analysis/compiledb configuration files
+compile_flags.txt
+compile_commands.json
+
+# Clang Formatter/Completer
+.clang-format
+!/.clang-format
+/.clang_complete
+
+# Special files and folders
+gitignored-*
+**/gitignored-*/
+
+# Other local/temporary files
+/*build*
+*build*
+build/*
+googletest-release*
+packagecache*
+/code-gallery
+
+# Local generated graphics
+*.vtu
+*.pvtu
+*.vtk
+*.gnuplot
+*.visit
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+*.x
+a.out
+
+# D programming language
+*.d
+
+# Valgrind core dumps
+vgcore.*
+
+# Test binaries
+test_*
+*_test
+
+
+
+### Python ###
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
-*.so
+*.pyc
 
 # Distribution / packaging
 .Python
@@ -114,6 +235,7 @@ ENV/
 env.bak/
 venv.bak/
 virtualenv.bak/
+pip-selfcheck.json
 
 # Spyder project settings
 .spyderproject
@@ -151,17 +273,9 @@ furtherdata/
 # Old models
 oldmodels/
 
-# JetBrains IDEs settings
-.idea/
-.idea
-*.idea
 
-# MS Visual Studio Code (and IonIDE updates workaround)
-.vscode/
-.ionide/
 
-# Old KDE settings
-.directory
+### Generic extras ###
 
 # Experiments and Notepads
 scratchpad.py
@@ -182,3 +296,21 @@ old/
 
 # References (useful for writing papers/etc...)
 references/
+
+
+
+### Project-specific files ###
+# Build system
+CMakeCache.txt
+CMakeFiles/
+CMakeFiles/*
+cmake_install.cmake
+Makefile
+install_manifest.txt
+
+# Utilities
+autowipe.sh
+
+# Compiled libraries
+libbinheap.so
+libcommon.a
