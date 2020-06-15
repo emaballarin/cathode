@@ -23,11 +23,9 @@
 # IMPORTS #
 # ------- #
 
-import numpy        # Just force the right OpenMP implementation!
+import numpy  # Just force the right OpenMP implementation!
 
-import vaex         # Dataframe provider
-import vaex as vx   # Dataframe provider (shorthand)
-
+import vaex  # Dataframe provider
 
 
 # --------- #
@@ -37,7 +35,7 @@ import vaex as vx   # Dataframe provider (shorthand)
 
 # Filter data by ticker
 def data_by_tick(data, tickname):
-    return data[data['ticker'] == tickname]
+    return data[data["ticker"] == tickname]
 
 
 # Filter data by ticker and column name
