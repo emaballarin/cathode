@@ -63,6 +63,7 @@ class StockDataset(Dataset):
         split_ratio,
         window_size,
         sliding_step=1,
+        batch_size=1,
         normalize=True,
         train=True,
     ):
@@ -71,6 +72,7 @@ class StockDataset(Dataset):
         self.window_size = window_size
         self.sliding_step = sliding_step
         self.train = train
+        self.batch_size = batch_size
 
         if isinstance(col_n, tuple):
             col_n = tuple(["date"]) + col_n
@@ -88,27 +90,60 @@ class StockDataset(Dataset):
 
         self.data = (self.data).values
 
-        if train:
-            self.data = self.data[: int(len(self.data) * self.split_ratio)]
+        self.data = self.data[: int(len(self.data) * self.split_ratio)]
+
+        assert len(self.data) >= self.window_size
+        assert (len(self.data) - self.window_size + 1)%self.sliding_step == 0   # self.data is training data
+
+        if not train:
+            self.sliding_step = self.window_size
+            self.test_data = self.data[
+                (len(self.data) - int(len(self.data) * self.split_ratio)) :
+            ]
+
+        self.offset = int((len(self.data) - self.window_size + 1)/self.sliding_step)%self.batch_size
+
+        self.nr_of_batches = (int((len(self.data) - self.window_size + 1)/self.sliding_step) - self.offset)/self.batch_size
+
 
     def __len__(self):
         if self.train:
-            return (
-                len(self.data) - self.window_size + 2 - self.sliding_step
-            )  # number of windows
+            return int((len(self.data) - self.window_size + 1)/self.sliding_step) - self.offset
         else:
-            return 1000
+            assert self.batch_size == 1
+            return 1 + int((len(self.data) - self.window_size + 1)/self.sliding_step) - self.offset
 
     def __getitem__(self, idx: int):
+
+        idx = (idx%self.batch_size)*self.nr_of_batches + idx//self.batch_size
+
+        idx = idx + self.offset
+
         if self.train:
-            window = self.data[
-                self.sliding_step * idx : (self.sliding_step * idx) + self.window_size
-            ]
+            window = self.data[int(self.sliding_step * idx):int((self.sliding_step * idx) + self.window_size)]
+            input_window, output_window = (
+                window[: int(len(window) * self.split_ratio)],
+                window[int(len(window) * self.split_ratio) :],
+            )
         else:
-            window = self.data
-        input_window, output_window = (
-            window[: int(len(window) * self.split_ratio)],
-            window[int(len(window) * self.split_ratio) :],
-        )
+            l = int((len(self.data) - self.window_size + 1)/self.sliding_step)
+
+            if idx == l - 1:
+                input_window, output_window = (
+                    [],
+                    self.test_data,
+                )
+
+            else:
+                window = self.data[
+                    self.sliding_step * idx : (self.sliding_step * idx)
+                    + self.window_size
+                ]
+
+                input_window, output_window = (
+                    window[: int(len(window) * self.split_ratio)],
+                    [],
+                )
+
         out_dict = {"past": input_window, "future": output_window}
         return out_dict
