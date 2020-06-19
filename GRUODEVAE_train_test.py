@@ -51,7 +51,7 @@ print(" ")
 
 ## HYPERPARAMETERS ##
 
-batch_size = 48
+batch_size = 36
 input_datasize = 1
 hidden_size_gruode = 10 * (input_datasize + 1)
 hidden_size_ffw_f = 170
@@ -60,7 +60,7 @@ hidden_size_ffw_onn = 28
 output_datasize = input_datasize
 ttsr = 0.9
 window_size = 1000
-max_train_len = 20
+max_train_len = 10
 
 ####################################################################################################
 
@@ -354,7 +354,6 @@ def param_gn(parameters, norm_type=2):
         )
     return total_norm
 
-
 ################################################################################
 
 
@@ -375,23 +374,29 @@ print(" ")
 
 ## TRAINING LOOP ##
 
-lr = 0.0055
+lr = 0.003
 eps = 1e-8
-cn = 58 * batch_size
-out_cn = 3 * cn
-wd = 0.00325
+cn = 65 * batch_size
+out_cn = 4 * cn
+crazy_cn = 2 * out_cn
+#wd = 0.00325
+wd = 0.00163
+gammadec = 0.66
+gammastep = 3
 epochs = max_train_len
+
+printout_step = 1
 
 n_batches = len(dataloader)
 
 criterion = nn.SmoothL1Loss(reduction="sum")
-# criterion = nn.MSELoss()
-# optimizer = AdamWCD(model.parameters(), lr=lr, eps=eps, clip_norm=cn, lrd=lrd)
-# optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
 optimizer = optim.AdamW(model.parameters(), lr=lr, eps=eps, weight_decay=wd)
-scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.55)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=gammastep, gamma=gammadec)
 
 model.train()
+
+clip_counter = 1
+
 for e in range(epochs):
     for i, dictionary in enumerate(dataloader):
         clip_iter = 3
@@ -399,23 +404,44 @@ for e in range(epochs):
         data_in = dictionary["past"].float().to(device)
         data_out_time = dictionary["future"][:, :, :1].float().to(device)
         data_out_data = dictionary["future"][:, :, 1:].float().to(device)
-        # tutto quello che viene valutato nel forward viene castato a float.32,
-        # mentre tutte le cose che vengono calcolate solo una volta (gradienti...) vengono castati a float.16
-        # with torch.cuda.amp.autocast(enabled=True):
+
         outputs = model(data_in, data_out_time)
         loss = criterion(outputs, data_out_data)
-        # optimizer.zero_grad()
         loss.backward()
         paramgn = param_gn(model.parameters())
-        print(" ")
-        print("[GRAD NORM]: ", paramgn.item())
-        if paramgn > out_cn:
+
+        # PRINTOUT
+        if i % printout_step == 0:
+            print(" ")
+            print("[UNCLIPPED GRAD NORM]: ", paramgn.item())
+
+        # ADAPTIVE GRADIENT CLIPPING
+        if paramgn > crazy_cn:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), out_cn)
+            clip_counter = 5
+        elif paramgn > out_cn:
             clip_iter = 2
-        if i % clip_iter == 0:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), cn)
+            if clip_counter % clip_iter == 0:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), cn)
+                clip_counter = 8
+        else:
+            clip_iter = 3
+                if clip_counter % clip_iter == 0:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), cn)
+                    clip_counter = 0
+
+        clip_counter += 1
+
+        # PRINTOUT
+        if i % printout_step == 0:
+            paramgn = param_gn(model.parameters())
+            print("[CLIPPED GRAD NORM]: ", paramgn.item())
+
         optimizer.step()
         scheduler.step()
-        if i % 1 == 0:
+
+        # PRINTOUT
+        if i % printout_step == 0:
             print(
                 "[EPOCH]: {}, [BATCH]: {}/{}, [LOSS]: {}".format(
                     e, i, n_batches, loss.item()
@@ -424,6 +450,7 @@ for e in range(epochs):
             print(" ")
             print(" ")
 
+# END OF THE LOOP
 # Save the model
 torch.save(model.state_dict(), "RNNVAEODE_bkp.pt")
 
@@ -447,7 +474,7 @@ for i,dictionary in enumerate(dataloader_test):
     data_out_data = dictionary["future"][:,:,1:].float().to(device)
     outputs = model_test(data_in,data_out_time)
     loss = criterion(outputs, data_out_data)
-    print("loss: ", loss)
+    print("[FINAL TEST LOSS]: ", loss)
 
 ####################################################################################################
 
