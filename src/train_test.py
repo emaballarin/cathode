@@ -37,6 +37,7 @@ from src.util.datamanip import data_by_tick, data_by_tick_col
 from src.util.plotting import data_timeplot
 from src.util.datasets import StockDataset
 from pyromaniac.optim.torch.adamwcd import AdamWCD as AdamWCD
+from torch import optim
 
 ####################################################################################################
 
@@ -154,9 +155,9 @@ class g(torch.nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        x = F.relu(x)
+        x = F.leaky_relu(x, (1.0/5.5))
         x = self.fc2(x)
-        x = F.relu(x)
+        x = F.leaky_relu(x, (1.0/5.5))
         x = self.BN(x)
         x = self.fc3(x)
         x = (
@@ -204,9 +205,9 @@ class OutputNN(torch.nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        x = F.relu(x)
+        x = F.leaky_relu(x, (1.0/5.5))
         x = self.fc2(x)
-        x = F.relu(x)
+        x = F.leaky_relu(x, (1.0/5.5))
         x = self.fc3(x)
         return x
 
@@ -374,11 +375,11 @@ print(" ")
 
 ## TRAINING LOOP ##
 
-lr = 0.0025
+lr = 0.0055
 eps = 1e-8
 cn = 58 * batch_size
 out_cn = 3 * cn
-wd = 0.0065
+wd = 0.00325
 epochs = max_train_len
 
 n_batches = len(dataloader)
@@ -388,6 +389,7 @@ criterion = nn.SmoothL1Loss(reduction="sum")
 # optimizer = AdamWCD(model.parameters(), lr=lr, eps=eps, clip_norm=cn, lrd=lrd)
 # optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
 optimizer = optim.AdamW(model.parameters(), lr=lr, eps=eps, weight_decay=wd)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.55)
 
 model.train()
 for e in range(epochs):
@@ -406,12 +408,13 @@ for e in range(epochs):
         loss.backward()
         paramgn = param_gn(model.parameters())
         print(" ")
-        print("Gradient_norm: ", paramgn.item())
+        print("[GRAD NORM]: ", paramgn.item())
         if paramgn > out_cn:
             clip_iter = 2
         if i % clip_iter == 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), cn)
         optimizer.step()
+        scheduler.step()
         if i % 1 == 0:
             print(
                 "[EPOCH]: {}, [BATCH]: {}/{}, [LOSS]: {}".format(
@@ -432,17 +435,19 @@ model_test = model
 model_test.eval()
 model_test.set_h0(h0_test)
 criterion = nn.MSELoss()
-for i, dictionary in enumerate(dataloader_test):
-    if dictionary["future"] == []:
-        data_in = dictionary["past"].float().to(device)
-        data_out_time = None
-        outputs = model_test(data_in, data_out_time)
-    else:
-        print(dictionary["future"][:, :, :1])
-        data_out_time = dictionary["future"][:, :, :1].float().to(device)
-        data_out_data = dictionary["future"][:, :, 1:].float().to(device)
-        outputs = model_test(data_in, data_out_time)
-        loss = criterion(outputs, data_out_data)
-        print("loss: ", loss)
+for i,dictionary in enumerate(dataloader_test):
+  if dictionary["future"] == []:
+    data_in = dictionary["past"].float().to(device)
+    data_out_time = None
+    outputs = model_test(data_in,data_out_time)
+  else:
+    print(dictionary["future"][:,:,:1])
+    data_in = None
+    data_out_time = dictionary["future"][:,:,:1].float().to(device)
+    data_out_data = dictionary["future"][:,:,1:].float().to(device)
+    outputs = model_test(data_in,data_out_time)
+    loss = criterion(outputs, data_out_data)
+    print("loss: ", loss)
 
 ####################################################################################################
+
