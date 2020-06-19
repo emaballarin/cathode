@@ -426,9 +426,9 @@ for e in range(epochs):
                 clip_counter = 8
         else:
             clip_iter = 3
-                if clip_counter % clip_iter == 0:
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), cn)
-                    clip_counter = 0
+            if clip_counter % clip_iter == 0:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), cn)
+                clip_counter = 0
 
         clip_counter += 1
 
