@@ -1,6 +1,6 @@
 # cathode
 
-*Putting ANODEs (Augmented Neural ODEs) to work*, for Time Series prediction and simulation.
+*Putting [A]NODEs ([Augmented] Neural ODEs) to work*, for Time Series prediction and simulation.
 
 A joint effort of:
 - [Arianna Tasciotti](https://github.com/ariannatasciotti)
