@@ -50,17 +50,16 @@ print(" ")
 ####################################################################################################
 
 ## HYPERPARAMETERS ##
-
 batch_size = 36
 input_datasize = 1
-hidden_size_gruode = 10 * (input_datasize + 1)
-hidden_size_ffw_f = 170
-hidden_size_ffw_g = 28
-hidden_size_ffw_onn = 28
+hidden_size_gruode = 20 * (input_datasize + 1)
+hidden_size_ffw_f = 240
+hidden_size_ffw_g = 36
+hidden_size_ffw_onn = 36
 output_datasize = input_datasize
-ttsr = 0.9
+ttsr = 0.95
 window_size = 1000
-max_train_len = 10
+max_train_len = 5
 
 ####################################################################################################
 
@@ -155,9 +154,9 @@ class g(torch.nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        x = F.leaky_relu(x, (1.0/5.5))
+        x = F.leaky_relu(x, (1.0 / 5.5))
         x = self.fc2(x)
-        x = F.leaky_relu(x, (1.0/5.5))
+        x = F.leaky_relu(x, (1.0 / 5.5))
         x = self.BN(x)
         x = self.fc3(x)
         x = (
@@ -205,9 +204,9 @@ class OutputNN(torch.nn.Module):
 
     def forward(self, x):
         x = self.fc1(x)
-        x = F.leaky_relu(x, (1.0/5.5))
+        x = F.leaky_relu(x, (1.0 / 5.5))
         x = self.fc2(x)
-        x = F.leaky_relu(x, (1.0/5.5))
+        x = F.leaky_relu(x, (1.0 / 5.5))
         x = self.fc3(x)
         return x
 
@@ -354,6 +353,7 @@ def param_gn(parameters, norm_type=2):
         )
     return total_norm
 
+
 ################################################################################
 
 
@@ -372,25 +372,26 @@ print(" ")
 
 ####################################################################################################
 
-## TRAINING LOOP ##
-
-lr = 0.003
+# TRAINING LOOP
+lr = 0.001
 eps = 1e-8
-cn = 65 * batch_size
+cn = 30
 out_cn = 4 * cn
 crazy_cn = 2 * out_cn
-#wd = 0.00325
-wd = 0.00163
-gammadec = 0.66
-gammastep = 3
+# wd = 0.00325
+# wd = 0.00163
+gammadec = 0.5
+gammastep = 2
 epochs = max_train_len
 
 printout_step = 1
 
 n_batches = len(dataloader)
 
-criterion = nn.SmoothL1Loss(reduction="sum")
-optimizer = optim.AdamW(model.parameters(), lr=lr, eps=eps, weight_decay=wd)
+# criterion = nn.SmoothL1Loss(reduction="mean")
+# optimizer = optim.AdamW(model.parameters(), lr=lr, eps=eps, weight_decay=wd)
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=lr)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=gammastep, gamma=gammadec)
 
 model.train()
@@ -415,7 +416,10 @@ for e in range(epochs):
             print(" ")
             print("[UNCLIPPED GRAD NORM]: ", paramgn.item())
 
+        torch.nn.utils.clip_grad_norm_(model.parameters(), cn)
+
         # ADAPTIVE GRADIENT CLIPPING
+        """
         if paramgn > crazy_cn:
             torch.nn.utils.clip_grad_norm_(model.parameters(), out_cn)
             clip_counter = 5
@@ -431,6 +435,7 @@ for e in range(epochs):
                 clip_counter = 0
 
         clip_counter += 1
+        """
 
         # PRINTOUT
         if i % printout_step == 0:
@@ -447,8 +452,9 @@ for e in range(epochs):
                     e, i, n_batches, loss.item()
                 )
             )
-            print(" ")
-            print(" ")
+
+        print(" ")
+        print(" ")
 
 # END OF THE LOOP
 # Save the model
@@ -462,19 +468,17 @@ model_test = model
 model_test.eval()
 model_test.set_h0(h0_test)
 criterion = nn.MSELoss()
-for i,dictionary in enumerate(dataloader_test):
-  if dictionary["future"] == []:
-    data_in = dictionary["past"].float().to(device)
-    data_out_time = None
-    outputs = model_test(data_in,data_out_time)
-  else:
-    print(dictionary["future"][:,:,:1])
-    data_in = None
-    data_out_time = dictionary["future"][:,:,:1].float().to(device)
-    data_out_data = dictionary["future"][:,:,1:].float().to(device)
-    outputs = model_test(data_in,data_out_time)
-    loss = criterion(outputs, data_out_data)
-    print("[FINAL TEST LOSS]: ", loss)
+for i, dictionary in enumerate(dataloader_test):
+    if dictionary["future"] == []:
+        data_in = dictionary["past"].float().to(device)
+        data_out_time = None
+        outputs = model_test(data_in, data_out_time)
+    else:
+        data_in = None
+        data_out_time = dictionary["future"][:, :, :1].float().to(device)
+        data_out_data = dictionary["future"][:, :, 1:].float().to(device)
+        outputs = model_test(data_in, data_out_time)
+        loss = criterion(outputs, data_out_data)
+        print("[FINAL TEST LOSS]: ", loss)
 
 ####################################################################################################
-

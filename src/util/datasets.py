@@ -79,56 +79,76 @@ class StockDataset(Dataset):
         else:
             col_n = tuple(["date"]) + tuple([col_n])
 
-        self.data = data_by_tick_col(self.dataframe, company, col_n)
+        self.full_data = data_by_tick_col(self.dataframe, company, col_n)
 
         if normalize:
             for col in col_n:
                 if col != "date":
-                    self.data[col] = (
-                        self.data[col] - self.data[col].mean()
-                    ) / self.data[col].std()
+                    self.full_data[col] = (
+                        self.full_data[col] - self.full_data[col].mean()
+                    ) / self.full_data[col].std()
 
-        self.data = (self.data).values
+        self.full_data = (self.full_data).values
 
-        self.data = self.data[: int(len(self.data) * self.split_ratio)]
+        self.data = self.full_data[
+            : int(len(self.full_data) * self.split_ratio)
+        ]  # training set
 
         assert len(self.data) >= self.window_size
-        assert (len(self.data) - self.window_size + 1)%self.sliding_step == 0   # self.data is training data
+        assert (
+            len(self.data) - self.window_size + 1
+        ) % self.sliding_step == 0  # self.data is training data
 
         if not train:
             self.sliding_step = self.window_size
-            self.test_data = self.data[
-                (len(self.data) - int(len(self.data) * self.split_ratio)) :
-            ]
+            self.test_data = self.full_data[int(len(self.data)) :]
 
-        self.offset = int((len(self.data) - self.window_size + 1)/self.sliding_step)%self.batch_size
+        self.offset = (
+            int((len(self.data) - self.window_size + 1) / self.sliding_step)
+            % self.batch_size
+        )
 
-        self.nr_of_batches = (int((len(self.data) - self.window_size + 1)/self.sliding_step) - self.offset)/self.batch_size
-
+        self.nr_of_batches = (
+            int((len(self.data) - self.window_size + 1) / self.sliding_step)
+            - self.offset
+        ) / self.batch_size
 
     def __len__(self):
         if self.train:
-            return int((len(self.data) - self.window_size + 1)/self.sliding_step) - self.offset
+            return (
+                int((len(self.data) - self.window_size + 1) / self.sliding_step)
+                - self.offset
+            )
         else:
             assert self.batch_size == 1
-            return 1 + int((len(self.data) - self.window_size + 1)/self.sliding_step) - self.offset
+            return (
+                1
+                + int((len(self.data) - self.window_size + 1) / self.sliding_step)
+                - self.offset
+            )
 
     def __getitem__(self, idx: int):
 
-        idx = (idx%self.batch_size)*self.nr_of_batches + idx//self.batch_size
+        idx = ((int(idx) % int(self.batch_size)) * int(self.nr_of_batches)) + int(
+            idx
+        ) // int(self.batch_size)
 
         idx = idx + self.offset
 
         if self.train:
-            window = self.data[int(self.sliding_step * idx):int((self.sliding_step * idx) + self.window_size)]
+            window = self.data[
+                int(self.sliding_step * idx) : int(
+                    (self.sliding_step * idx) + self.window_size
+                )
+            ]
             input_window, output_window = (
                 window[: int(len(window) * self.split_ratio)],
                 window[int(len(window) * self.split_ratio) :],
             )
         else:
-            l = int((len(self.data) - self.window_size + 1)/self.sliding_step)
+            l = int((len(self.data) - self.window_size + 1) / self.sliding_step)
 
-            if idx == l - 1:
+            if idx == l:
                 input_window, output_window = (
                     [],
                     self.test_data,
@@ -136,8 +156,9 @@ class StockDataset(Dataset):
 
             else:
                 window = self.data[
-                    self.sliding_step * idx : (self.sliding_step * idx)
-                    + self.window_size
+                    int(self.sliding_step * idx) : int(
+                        (self.sliding_step * idx) + self.window_size
+                    )
                 ]
 
                 input_window, output_window = (
