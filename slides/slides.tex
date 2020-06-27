@@ -175,7 +175,7 @@ The \textbf{Long Short Term Memory Unit} is an improvement of the recurrent unit
 	\frac{d \textbf{h}(t)}{dt} = f(\textbf{h}(t), t, \theta)
 	\end{equation}
 
-	 with the function $\textbf{h}$ parameterized by a neural network, and solve it with a differentiable discretization method for ODEs.
+	 with the function $f$ parameterized by a neural network, and solve it with a differentiable discretization method for ODEs.
 \end{frame}
 %---------------------------------------------%
 
@@ -579,12 +579,12 @@ However, we often used very large windows to further improve learning on the mos
 	\frametitle{Final remarks and future work (2)}
 	\framesubtitle{Just one -- even successful -- try is never enough!}
 
-	Overall, a successful application of \textit{state-of-the-art} NN methods to a real-world problem, despite the lack of settled knowledge on the matter.
+	Overall, a moderately-successful application of \textit{state-of-the-art} NN methods to a real-world problem, despite the lack of settled knowledge on the matter and training instabilities.
 	\hfill \break
 	\begin{itemize}
-		\item{Very \textit{close-to-reality} predictions after successful training;}
+		\item{Fairly \textit{close-to-reality} predictions provided a successful training;}
 		\item{Usable uncertainty estimation for \textit{limit-case} scenarios;}
-		\item{Super-fast and easily-introspectable training ($\leftarrow$ heuristics).}
+		\item{Fast and introspectable training ($\leftarrow$ heuristics).}
 	\end{itemize}
 	\hfill \break
 	Not a perfect one, though...
