@@ -234,7 +234,7 @@ The \textbf{Long Short Term Memory Unit} is an improvement of the recurrent unit
 %---------------------------------------------%
 %% SLIDE 1.6.4:
 \begin{frame}
-	\frametitle{GRU-ODE}
+	\frametitle{GRU-ODE architecture}
 	The state between observations is the solution of an ODE:
 	$$h_{i}^{'}=ODESolve(f_{\theta}, h_{i-1}, (t_{i-1},t_{i}))$$
 	\hfill \break
@@ -268,9 +268,9 @@ The \textbf{Long Short Term Memory Unit} is an improvement of the recurrent unit
 %---------------------------------------------%
 %% SLIDE Intermezzo:
 \begin{frame}
-	\frametitle{How to learn the latent representation?}
-	\pause \center $\bar{x}$ observed, $\bar{z}$ latent, $p(\bar{x},\bar{z})$ joint
-	\pause \center $q(z_{0}|\bar{x}) =  \mathcal{N}(\mu_{z_{0}},\sigma_{z_{0}})$
+	\frametitle{Variational generative model}
+	 \center $x_{in}$, $x_{out}$ observed, $z$ latent, $p(x_{in}, x_{out}, z)$ joint
+	\pause \center $q(z_{0}|x_{in}, x_{out}) =  \mathcal{N}(\mu_{z_{0}},\sigma_{z_{0}})$
 \end{frame}
 }
 %---------------------------------------------%
