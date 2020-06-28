@@ -166,7 +166,7 @@ The \textbf{Long Short Term Memory Unit} is an improvement of the recurrent unit
 	The ResNet model:
 
 	\begin{equation}
-	\textbf{h}_{t+1} =\textbf{h}_t + f(\textbf{h}_t, \theta_t)
+	\textbf{h}_{l+1} =\textbf{h}_l + f(\textbf{h}_l, \theta_l)
 	\end{equation}
 
 	can be seen as  the Euler method for solving ordinary differential equations. We can exploit this new relation by adding more layers into the network and take smaller time steps.  In the limit we can describe our new neural network with the following model (\textbf{Neural ODE}):
@@ -601,9 +601,13 @@ However, we often used very large windows to further improve learning on the mos
 %% THANKS!
 \begin{frame}
 	\frametitle{Greetings}
-	Thank you for your attention.
+	\center Thank you for your attention!
+	%\hfill\break
+%	\hfill\break
+	\center \includegraphics[scale = 0.22]{dndmil.jpeg}
 \end{frame}
 
 %-----------------------------------------------%
 %-----------------------------------------------%
 \end{document}
+
